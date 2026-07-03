@@ -15,4 +15,5 @@ xt/eg_runs.t
 xt/fork_cms.t
 xt/kwalitee.t
 xt/pod.t
+xt/slotless_reader_recovery.t
 xxhash.h
