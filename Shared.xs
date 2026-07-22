@@ -20,6 +20,8 @@
  * intervene between EXTRACT and the first use of h -- a load and a branch,
  * immediately before a lock that costs orders of magnitude more. */
 #define REEXTRACT(sv) \
+    if (!SvROK(sv)) \
+        croak("Data::CountMinSketch::Shared object was replaced during the call"); \
     h = INT2PTR(CmsHandle*, SvIV(SvRV(sv))); \
     if (!h) croak("Data::CountMinSketch::Shared object destroyed during the call")
 
@@ -187,6 +189,10 @@ merge(self, other)
         croak("Data::CountMinSketch::Shared->merge: expected a Data::CountMinSketch::Shared object");
     CmsHandle *o = INT2PTR(CmsHandle*, SvIV(SvRV(other)));
     if (!o) croak("Attempted to use a destroyed Data::CountMinSketch::Shared object");
+    /* sv_isobject/sv_derived_from above begin with SvGETMAGIC(other), so a
+     * tied `other` can have destroyed self before h is used below. `o` was
+     * read after that magic and needs no re-read. */
+    REEXTRACT(self);
 
     /* w and d are immutable after creation -- compare lock-free, croak BEFORE
      * allocating, so a mismatch holds no lock and leaks no buffer. */
